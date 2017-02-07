@@ -12,6 +12,7 @@
       - strongswan
       - curl
       - python-pip
+      - git
 
    - name : Installing AWSCLI Tools.
      pip: name=awscli
