@@ -1,0 +1,84 @@
+---
+- hosts: localhost
+  gather_facts: true
+  connection: local
+
+  tasks:
+
+   - name: Installing Required Packages.
+     yum: name={{ item }} state=present
+     with_items:
+      - https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+      - strongswan
+      - curl
+      - python-pip
+
+   - name : Installing AWSCLI Tools.
+     pip: name=awscli
+
+   - name: Get the EC2 Instance ID
+     shell: curl --silent http://169.254.169.254/latest/meta-data/instance-id
+     register: ec2_instance_id
+   - name: setting EC2 instance id as a Fact.
+     set_fact:
+      VPN_Connection_Name: "{{ec2_instance_id.stdout}}"   
+
+   - name: Getting Public IP assigned to an EC2 Instance.
+     shell: curl --silent http://169.254.169.254/latest/meta-data/public-ipv4
+     register: ec2_public_ip
+   - name: Setting Public IP assigned to an EC2 Instance as a fact.
+     set_fact:
+      ec2_public_ip: "{{ec2_public_ip.stdout}}"
+
+   - name: Getting NIC's MAC Address assigned to an EC2 Instance.
+     shell: curl --silent http://169.254.169.254/latest/meta-data/network/interfaces/macs/
+     register: ec2_mac_address
+   - name: Setting NIC's MAC address assigned to an EC2 Instance as a fact.
+     set_fact:
+      ec2_mac_address: "{{ec2_mac_address.stdout}}"
+
+   - name: Getting a Subnet ID for the NIC assigned to an EC2 Instance.
+     shell: curl --silent http://169.254.169.254/latest/meta-data/network/interfaces/macs/"{{ec2_mac_address}}"/subnet-id
+     register: ec2_subnet_id
+
+   - name: Getting a VPC ID for the Subnet used by an EC2 Instance.
+     shell: curl --silent http://169.254.169.254/latest/meta-data/network/interfaces/macs/"{{ec2_mac_address}}"/vpc-id
+     register: ec2_vpc_id
+   - name: Setting VPC ID as a fact.
+     set_fact:
+      ec2_vpc_id: "{{ec2_vpc_id.stdout}}"   
+
+   - name: Getting CIDR block of VPC used by an EC2 Instance.
+     shell: curl --silent http://169.254.169.254/latest/meta-data/network/interfaces/macs/"{{ec2_mac_address}}"/vpc-ipv4-cidr-block
+     register: ec2_vpc_cidr
+   - name: Setting VPC CIDR as a fact.
+     set_fact:
+      ec2_vpc_cidr: "{{ec2_vpc_cidr.stdout}}"
+
+   - name: Creating ipsec.conf for the left side of the VPN.
+     template: 
+       src: ../templates/ipsec.conf.left
+       dest: /etc/strongswan/ipsec.conf
+   
+   - name: Creating ipsec.secrets for the left side of the VPN.
+     template: 
+       src: ../templates/ipsec.secrets
+       dest: /etc/strongswan/ipsec.secrets
+
+   - name: Enabling IPv4 Forwarding.
+     sysctl: name=net.ipv4.ip_forward value=1 sysctl_set=yes
+
+   - name : Creating ipsec.conf for right side of the VPN.
+     template:
+       src: ../templates/ipsec.conf.right
+       dest: /tmp/ipsec.conf.right
+
+   - name : Uploading Right side of VPN config to S3.
+     s3:
+       bucket: mps-dshah-strongswan-vpn-config-bucket
+       object: ipsec.conf.right
+       src: /tmp/ipsec.conf.right
+       mode: put
+
+#   - name: Starting StrongSwan VPN Service.
+     #command: /sbin/strongswan start
