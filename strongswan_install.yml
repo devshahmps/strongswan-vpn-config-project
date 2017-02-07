@@ -81,17 +81,17 @@
        src: /tmp/ipsec.conf.right
        mode: put
    
-   - name: Creating ipsec.secrets for the Right side of the VPN.
-     template: 
-       src: ../templates/ipsec.secrets.right
-       dest: /tmp/ipsec.secrets.right
+#   - name: Creating ipsec.secrets for the Right side of the VPN.
+#     template: 
+#       src: ../templates/ipsec.secrets.right
+#       dest: /tmp/ipsec.secrets.right
 
-   - name : Uploading Right side of ipsec.secrets from S3.
-     s3:
-       bucket: mps-dshah-strongswan-vpn-config-bucket
-       object: ipsec.secrets.right
-       src: /tmp/ipsec.secrets.right
-       mode: put
+#   - name : Uploading Right side of ipsec.secrets from S3.
+#     s3:
+#       bucket: mps-dshah-strongswan-vpn-config-bucket
+#       object: ipsec.secrets.right
+#       src: /tmp/ipsec.secrets.right
+#       mode: put
 
 
 
