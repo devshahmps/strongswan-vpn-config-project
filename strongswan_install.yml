@@ -63,7 +63,7 @@
    
    - name: Creating ipsec.secrets for the left side of the VPN.
      template: 
-       src: ../templates/ipsec.secrets.left
+       src: ../templates/ipsec.secrets
        dest: /etc/strongswan/ipsec.secrets
 
    - name: Enabling IPv4 Forwarding.
@@ -92,6 +92,8 @@
        object: ipsec.secrets.right
        src: /tmp/ipsec.secrets.right
        mode: put
+
+
 
 #   - name: Starting StrongSwan VPN Service.
      #command: /sbin/strongswan start
