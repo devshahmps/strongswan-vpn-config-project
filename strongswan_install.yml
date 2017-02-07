@@ -63,7 +63,7 @@
    
    - name: Creating ipsec.secrets for the left side of the VPN.
      template: 
-       src: ../templates/ipsec.secrets
+       src: ../templates/ipsec.secrets.left
        dest: /etc/strongswan/ipsec.secrets
 
    - name: Enabling IPv4 Forwarding.
@@ -79,6 +79,18 @@
        bucket: mps-dshah-strongswan-vpn-config-bucket
        object: ipsec.conf.right
        src: /tmp/ipsec.conf.right
+       mode: put
+   
+   - name: Creating ipsec.secrets for the Right side of the VPN.
+     template: 
+       src: ../templates/ipsec.secrets.right
+       dest: /tmp/ipsec.secrets.right
+
+   - name : Uploading Right side of ipsec.secrets from S3.
+     s3:
+       bucket: mps-dshah-strongswan-vpn-config-bucket
+       object: ipsec.secrets.right
+       src: /tmp/ipsec.secrets.right
        mode: put
 
 #   - name: Starting StrongSwan VPN Service.
