@@ -1,0 +1,25 @@
+# Ansible Managed
+# Begin ipsec.conf
+config setup
+  strictcrlpolicy=no
+  charondebug=all
+conn %default
+  ikelifetime=60m
+  keylife=20m
+  rekeymargin=3m
+  keyingtries=1
+  keyexchange=ikev2
+conn {{VPN_Connection_Name}}_{{ec2_vpc_id}}
+  authby=secret
+  auto=start
+  type=tunnel
+  left={{ansible_eth0.ipv4.address}}
+  leftid={{ec2_public_ip}}
+  leftsubnet={{ec2_vpc_cidr}}
+  leftauth=psk
+  right=52.14.106.181
+  rightsubnet=192.170.0.0/16
+  rightauth=psk
+  ike=aes128-sha1-modp1024
+  esp=aes128-sha1-modp1024
+# End ipsec.conf
